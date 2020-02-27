@@ -1,0 +1,9 @@
+{
+    "path" : "~/GitHub/Workshop-R-Markdown-and-Github-Workflows/Dataset.world.happiness",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1582825392765.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1635110447",
+    "id" : "FC5AC69A",
+    "lastKnownWriteTime" : 1582825550,
+    "last_content_update" : 1582825550820,
+    "path" : "//su2/U3/SaraivaR/GitHub/Workshop-R-Markdown-and-Github-Workflows/Dataset.world.happiness/Analysis.script.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "9,33",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
