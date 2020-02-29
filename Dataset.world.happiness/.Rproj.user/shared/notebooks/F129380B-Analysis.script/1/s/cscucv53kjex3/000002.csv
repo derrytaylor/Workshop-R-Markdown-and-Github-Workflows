@@ -1,0 +1,175 @@
+"0","if(!require(dplyr)){install.packages(""dplyr"")}   "
+"2","Loading required package: dplyr
+"
+"2","
+Attaching package: ‘dplyr’
+
+"
+"2","The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+"
+"0","if(!require(ggplot2)){install.packages(""ggplot2"")}   "
+"2","Loading required package: ggplot2
+"
+"0","if(!require(Hmisc)){install.packages(""Hmisc"")}   "
+"2","Loading required package: Hmisc
+"
+"2","Loading required package: lattice
+"
+"2","Failed with error:  "
+"2","â€˜package â€˜survivalâ€™ 2.43.3 was found, but >= 3.1.6 is required by â€˜Hmiscâ€™â€™"
+"2","
+"
+"2","Installing package into ‘C:/Users/renan/Documents/R/win-library/3.5’
+(as ‘lib’ is unspecified)
+"
+"2","also installing the dependency ‘survival’
+
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/3.5/survival_3.1-8.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 7710044 bytes (7.4 MB)
+"
+"2","downloaded 7.4 MB
+
+"
+"2","trying URL 'https://cran.rstudio.com/bin/windows/contrib/3.5/Hmisc_4.3-1.zip'
+"
+"2","Content type 'application/zip'"
+"2"," length 3117576 bytes (3.0 MB)
+"
+"2","downloaded 3.0 MB
+
+"
+"1","package â€˜survivalâ€™ successfully unpacked and MD5 sums checked
+"
+"1","package â€˜Hmiscâ€™ successfully unpacked and MD5 sums checked
+"
+"1","
+"
+"1","The downloaded binary packages are in
+	C:\Users\renan\AppData\Local\Temp\RtmpKAXfkE\downloaded_packages"
+"1","
+"
+"0","if(!require(pastecs)){install.packages(""pastecs"")}   "
+"2","Loading required package: pastecs
+"
+"2","
+Attaching package: ‘pastecs’
+
+"
+"2","The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+"
+"0","if(!require(psych)){install.packages(""psych"")}   "
+"2","Loading required package: psych
+"
+"2","
+Attaching package: ‘psych’
+
+"
+"2","The following objects are masked from ‘package:ggplot2’:
+
+    %+%, alpha
+
+"
+"0","if(!require(corrplot)){install.packages(""corrplot"")}   "
+"2","Loading required package: corrplot
+"
+"2","corrplot 0.84 loaded
+"
+"0","if(!require(ggExtra)){install.packages(""ggExtra"")}   "
+"2","Loading required package: ggExtra
+"
+"0","if(!require(plotly)){install.packages(""plotly"")} "
+"2","Loading required package: plotly
+"
+"2","
+Attaching package: ‘plotly’
+
+"
+"2","The following object is masked from ‘package:ggplot2’:
+
+    last_plot
+
+"
+"2","The following object is masked from ‘package:stats’:
+
+    filter
+
+"
+"2","The following object is masked from ‘package:graphics’:
+
+    layout
+
+"
+"0","if(!require(purrr)){install.packages(""purrr"")} "
+"2","Loading required package: purrr
+"
+"0","if(!require(tidyr)){install.packages(""tidyr"")} "
+"2","Loading required package: tidyr
+"
+"2","
+Attaching package: ‘tidyr’
+
+"
+"2","The following object is masked from ‘package:pastecs’:
+
+    extract
+
+"
+"0","if(!require(PerformanceAnalytics)){install.packages(""PerformanceAnalytics"")}"
+"2","Loading required package: PerformanceAnalytics
+"
+"2","Loading required package: xts
+"
+"2","Loading required package: zoo
+"
+"2","
+Attaching package: ‘zoo’
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+"
+"2","
+Attaching package: ‘xts’
+
+"
+"2","The following objects are masked from ‘package:pastecs’:
+
+    first, last
+
+"
+"2","The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+"
+"2","
+Package PerformanceAnalytics (1.5.2) loaded.
+Copyright (c) 2004-2018 Peter Carl and Brian G. Peterson, GPL-2 | GPL-3
+https://github.com/braverock/PerformanceAnalytics
+
+"
+"2","
+Attaching package: ‘PerformanceAnalytics’
+
+"
+"2","The following object is masked from ‘package:graphics’:
+
+    legend
+
+"

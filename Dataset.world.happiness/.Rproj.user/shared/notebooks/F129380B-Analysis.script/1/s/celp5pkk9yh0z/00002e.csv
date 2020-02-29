@@ -1,0 +1,5 @@
+"0","g <- ggplot(data.clean, aes(Social.support, Happiness.score)) + "
+"0","  geom_jitter(aes(col=Year)) + "
+"0","  geom_smooth(aes(col=Year), method=""lm"", se=F) +"
+"0","  labs(title =""Happiness vs Social Support by year"")"
+"0","ggMarginal(g, type = ""histogram"", fill=""transparent"")"

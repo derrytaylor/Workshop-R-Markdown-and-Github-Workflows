@@ -1,0 +1,4 @@
+"0","ggplot(data.clean, aes(Freedom, Happiness.score)) + "
+"0","  geom_jitter(aes(col=Year)) + "
+"0","  geom_smooth(aes(col=Year), method=""lm"", se=F) +"
+"0","  labs(title =""Happiness vs Freedom by year"")"

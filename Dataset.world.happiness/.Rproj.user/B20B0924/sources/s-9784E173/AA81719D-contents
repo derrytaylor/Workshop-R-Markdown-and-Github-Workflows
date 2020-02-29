@@ -1,0 +1,665 @@
+---
+title: "DataAnalysis.EMS.Development"
+output: html_document
+---
+
+## Install and load necessary packages
+
+```{r cars}
+if(!require(foreign)){install.packages("foreign")}        
+if(!require(plyr)){install.packages("plyr")}                
+if(!require(psych)){install.packages("psych")}            
+if(!require(ggplot2)){install.packages("ggplot2")}         
+if(!require(reshape2)){install.packages("reshape2")}      
+if(!require(geepack)){install.packages("geepack")}          
+if(!require(jtools)){install.packages("jtools")}            
+if(!require(car)){install.packages("car")}                  
+if(!require(lsr)){install.packages("lsr")}                  
+if(!require(lme4)){install.packages("lme4")}            
+if(!require(mctest)){install.packages("mctest")}    
+if(!require(sjPlot)){install.packages("sjPlot")} 
+if(!require(OneR)){install.packages("OneR")} 
+
+if(!require(apaTables)){install.packages("apaTables")} 
+if(!require(cowplot)){install.packages("cowplot")} 
+if(!require(questionr)){install.packages("questionr")}  
+if(!require(skimr)){install.packages("skimr")}  
+if(!require(ltm)){install.packages("ltm")}  
+if(!require(sjstats)){install.packages("sjstats")}  
+
+
+#devtools::install_github("IngerMathilde/legalPsych")
+library(legalPsych)
+
+##Bot detector function
+
+source_github <- function(u) {
+  # load package
+  require(RCurl)
+  
+  # read script lines from website
+  script <- getURL(u, ssl.verifypeer = FALSE)
+  
+  # parase lines and evaluate in the global environment
+  eval(parse(text = script))
+}
+
+source("https://raw.githubusercontent.com/SICLab/detecting-bots/master/180816mTurkLowQualityResponseDetection.R")
+
+
+apatheme=theme_bw()+
+  theme(panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.border=element_blank(),
+        axis.line=element_line(),
+        text=element_text(family='Times',size=16))
+
+```
+
+
+
+
+## Read the data
+
+```{r cars}
+
+data.raw <- read.spss("DataEMS.sav", to.data.frame = T,use.value.labels = T)
+
+```
+
+
+
+## Data cleaning
+
+```{r cars}
+## Create variable of choosers and nonchoosers in the lineup tasks
+
+data.raw$Lineup1.ChoiceValue.numeric <- as.numeric(as.character(data.raw$Lineup1.ChoiceValue))
+data.raw$Lineup2.ChoiceValue.numeric <- as.numeric(as.character(data.raw$Lineup2.ChoiceValue))
+
+data.raw$Lineup1.ChoiceChooser <- as.factor(with(data.raw, (ifelse((Lineup1.ChoiceValue.numeric %in% 1:6), "Chooser",
+                                                      ifelse((Lineup1.ChoiceValue.numeric == 7), "Nonchooser", NA)))))
+
+data.raw$Lineup2.ChoiceChooser <- as.factor(with(data.raw, (ifelse((Lineup2.ChoiceValue.numeric %in% 1:6), "Chooser",
+                                                      ifelse((Lineup2.ChoiceValue.numeric %in% 7), "Nonchooser", NA)))))
+
+### Create variable indicating the category (e.g., Correct Suspec ID, Incorect Filler) of each lineup decision.
+
+data.raw$Lineup1.ChoiceCategory <- as.factor(with(data.raw, (ifelse((Lineup1.LineupCondition == "Present" & Lineup1.ChoiceValue.numeric == 1), "CorSuspID",
+                                                      ifelse((Lineup1.LineupCondition == "Absent" & Lineup1.ChoiceValue.numeric == 7), "CorRej",
+                                                      ifelse((Lineup1.LineupCondition == "Absent" & Lineup1.ChoiceValue.numeric == 1), "IncorSuspId",
+                                                      ifelse((Lineup1.ChoiceValue.numeric %in% 2:6), "IncorFiller",
+                                                      ifelse((Lineup1.LineupCondition == "Present"& Lineup1.ChoiceValue.numeric == 7), "IncorRej", NA))))))))
+
+data.raw$Lineup2.ChoiceCategory <- as.factor(with(data.raw, (ifelse((Lineup2.LineupCondition == "Present" & Lineup2.ChoiceValue.numeric == 1), "CorSuspID",
+                                                      ifelse((Lineup2.LineupCondition == "Absent" & Lineup2.ChoiceValue.numeric == 7), "CorRej",
+                                                      ifelse((Lineup2.LineupCondition == "Absent" & Lineup2.ChoiceValue.numeric == 1), "IncorSuspId",
+                                                      ifelse((Lineup2.ChoiceValue.numeric %in% 2:6), "IncorFiller",
+                                                      ifelse((Lineup2.LineupCondition == "Present"& Lineup2.ChoiceValue.numeric == 7), "IncorRej", NA))))))))
+
+
+
+### Create accuracy variable indicating whether a lineup identification was correct or incorrect
+
+data.raw$Lineup1.ChoiceCategory.numeric <- as.numeric(data.raw$Lineup1.ChoiceCategory)
+data.raw$Lineup2.ChoiceCategory.numeric <- as.numeric(data.raw$Lineup2.ChoiceCategory)
+
+data.raw$Lineup1.ChoiceCorrect <- as.factor(with(data.raw, (ifelse((Lineup1.ChoiceCategory.numeric %in% 1:2), "Correct",
+                                                      ifelse((Lineup1.ChoiceCategory.numeric %in% 3:5), "Incorrect", NA)))))
+
+data.raw$Lineup2.ChoiceCorrect <- as.factor(with(data.raw, (ifelse((Lineup2.ChoiceCategory.numeric %in% 1:2), "Correct",
+                                                      ifelse((Lineup2.ChoiceCategory.numeric %in% 3:5), "Incorrect", NA)))))
+
+data.raw$Lineup1.ChoiceCorrect.SuspectID <- as.factor(with(data.raw, (ifelse((Lineup1.ChoiceCategory.numeric %in% 2), "Correct",
+                                                      ifelse((Lineup1.ChoiceCategory.numeric %in% 5), "Incorrect", NA)))))
+
+data.raw$Lineup2.ChoiceCorrect.SuspectID <- as.factor(with(data.raw, (ifelse((Lineup2.ChoiceCategory.numeric %in% 2), "Correct",
+                                                      ifelse((Lineup2.ChoiceCategory.numeric %in% 5), "Incorrect", NA)))))
+
+
+#Change confidence variables from percentage to numeric
+
+data.raw$Lineup1.Confidence <- as.numeric(sub("%", "", data.raw$Lineup1.Confidence))
+data.raw$Lineup2.Confidence <- as.numeric(sub("%", "", data.raw$Lineup2.Confidence))
+
+#Create variables for the metamemory measures
+
+EMS.items <- grep("EMS", names(data.raw),value=T)
+
+MMQCont.items <-grep("MMQCont", names(data.raw),value=T)
+MMQAbi.items <- grep("MMQAbi", names(data.raw),value=T)
+MMQStrat.items <- grep("MMQStrat", names(data.raw),value=T)
+
+SSMQ.items <- grep("SSMQ", names(data.raw),value=T)
+
+Olsson.items <- grep("Olsson", names(data.raw),value=T)
+
+#Change metamemory variables to numeric
+
+data.raw[,c(EMS.items,MMQCont.items,MMQAbi.items,MMQStrat.items,SSMQ.items,Olsson.items)] <- data.frame(sapply(data.raw[,c(EMS.items,MMQCont.items,MMQAbi.items,MMQStrat.items,SSMQ.items,Olsson.items)], as.numeric))
+
+#Change ID variable to categorical
+
+data.raw$ID <- as.factor(data.raw$ID)
+```
+
+
+##Check inclusion criteria
+
+```{r inclusion criteria}
+
+# We will use the variable Progression to Check for participants that completed the study. Participants with progression of 25% or higher have completed the study, we are not using 100% as a criteria because there are variables that are not shown to all participants.
+
+data.raw1 <- subset(data.raw, Progress > 25)
+
+# Now we will remove participants that took too long to complete the survey or were very fast
+
+data.raw2 <- subset(data.raw1, DurationSeconds < 5400)
+
+data.raw3 <- subset(data.raw2, DurationSeconds > 900)
+
+
+# Now we will only include participants that have passed at least four out of five of the attention checks
+
+data.raw3$AttentionCheck <- as.numeric(as.character(data.raw3$AttentionCheck))
+
+data.raw4 <- subset(data.raw3, AttentionCheck >= 4)
+
+# Now we will remove suspicious responses that were likely provided by bots on MTurk using the function bot.detector: https://github.com/SICLab/detecting-bots
+
+data.raw4$bot.suspicion <- bot.detector(data.raw4$LocationLatitude, data.raw4$LocationLongitude, Threshold = .10, Comments = as.character(data.raw4$environment), Comments2 = as.character(data.raw4$technical.issues), Comments3 = as.character(data.raw4$remarks))
+
+data.raw5 <- subset(data.raw4, bot.suspicion < 3)
+
+# Now we remove other suspicious responses by inspecting the variables environment, technical.issues and remarks
+
+#View(data.raw5[,c("ID","environment","technical.issues","remarks")])
+
+data.raw6 <- data.raw5[!data.raw5$ID %in% c(1122,657,593,187,647,504,583,552,1115,1153,639,452,521,536,525,524,654,1327,644,558,460,504,647,1070,626,1167,420,399,563,646,620,1285,1218,516,443,590,414,1306,625,584,583,1057,751,424,437,423,1225,390,444,656), ]
+
+#View(data.raw6[,c("ID","environment","technical.issues","remarks")])
+
+# Create final dataset for analysis
+
+data.clean <- data.raw6
+```
+
+
+
+```{r prepare metamemory measures for analysis}
+
+#Reverse MMQ-Contentment items (2,4,5,7,8,10,11,14,15,16,18)
+
+MMQCont.notreversed <- data.clean[,MMQCont.items]
+
+keys <- c(1,-1,1,-1,-1,1,-1,-1,1,-1,-1,1,1,-1,-1,-1,1,-1)
+
+MMQCont <- reverse.code(keys,MMQCont.notreversed,mini=rep(1,18),maxi=rep(5,18))
+
+data.clean$MMQContentment <- apply(MMQCont,1,mean)
+data.clean$MMQAbility <- apply(data.clean[,c(MMQAbi.items)],1,mean)
+data.clean$MMQStrategy <- apply(data.clean[,c(MMQStrat.items)],1,mean)
+data.clean$SSMQ <- apply(data.clean[,c(SSMQ.items)],1,mean)
+
+EMSContentment.items <- c("EMS1","EMS3","EMS6","EMS7","EMS8","EMS10","EMS14","EMS16","EMS20","EMS22")
+EMSDiscontentment.items <- c("EMS4","EMS9","EMS11","EMS12","EMS15","EMS17","EMS21","EMS23")
+EMSStrategy.items <- c("EMS24","EMS25","EMS26","EMS27","EMS28")
+
+
+data.clean$EMSDiscontentment <- apply(data.clean[,c(EMSDiscontentment.items)],1,mean)
+data.clean$EMSContentment <- apply(data.clean[,c(EMSContentment.items)],1,mean)
+data.clean$EMSStrategy <- apply(data.clean[,c(EMSStrategy.items)],1,mean)
+
+cronbach.alpha(data.clean[,c(EMSDiscontentment.items)],na.rm=T)
+cronbach.alpha(data.clean[,c(EMSContentment.items)],na.rm=T)
+cronbach.alpha(data.clean[,c(EMSStrategy.items)],na.rm=T)
+
+
+cronbach.alpha(MMQCont,na.rm=T)
+cronbach.alpha(data.clean[,c(MMQAbi.items)],na.rm=T)
+cronbach.alpha(data.clean[,c(MMQStrat.items)],na.rm=T)
+cronbach.alpha(data.clean[,c(SSMQ.items)],na.rm=T)
+
+correlation.data <- data.clean[,c("EMSContentment","EMSDiscontentment","EMSStrategy","MMQContentment","MMQAbility","MMQStrategy","SSMQ")]
+
+library(GGally)
+#ggpairs(correlation.data)
+```
+
+## Descriptive statistics
+
+```{r describe the sample}
+Hmisc::describe(data.clean$Gender) 
+Hmisc::describe(data.clean$Age)
+Hmisc::describe(data.clean$Source)
+table(data.clean$LineupMode)
+
+with(data.clean, table(Lineup1.ChoiceChooser, LineupMode))
+with(data.clean, table(Lineup2.ChoiceChooser, LineupMode))
+```
+
+### PREP
+Before we could conduct the analyses we first needed to create a long data-set, rename variables, and create the lineup data-frame.
+
+#### LONG DATASET 
+ In order to compare the repeated lineup identifications (two per participant) we first have to create a data-frame with a long format. This way, all the variables related to the first and second lineup identifications will be assigned to the same variables (e.g., choice, TA/TP, etc). Furthermore, an extra variable will be added to indicate whether each identification was the first or the second identification. 
+ 
+```{r Create Long Data Set}
+data.long.complete <- reshape(data.clean, direction='long', 
+        varying=c('Lineup1.ChoiceCorrect', 'Lineup1.ChoiceChooser','Lineup1.ChoiceCategory','Lineup1.Confidence', "Lineup2.ChoiceCorrect",'Lineup2.ChoiceChooser','Lineup2.ChoiceCategory','Lineup2.Confidence'), 
+        timevar='Lineup',
+        times=c('Lineup1', 'Lineup2'),
+        v.names=c('LineupChoice','LineupAccuracy','LineupConfidence','LineupChoiceCategory'),
+        idvar='ID')
+
+#Select relevant variables
+data.long <- data.long.complete[,c("ID","LineupMode","Lineup","LineupAccuracy","LineupConfidence","LineupChoice","LineupChoiceCategory","EMSContentment","EMSStrategy","EMSDiscontentment","EMSContentment", "MMQContentment","MMQAbility","MMQStrategy","SSMQ","Age")]
+
+
+data.long$Lineup <- as.factor(data.long$Lineup)
+
+data.long<-data.long [order(data.long$ID),]
+
+#Create categorical variables for the metamemory measures (low, medium and high scores)
+
+data.long$EMSContentment.Categorical <- bin(data.long$EMSContentment, nbins=3,method="content")
+levels(data.long$EMSContentment.Categorical) <- c("Low","Medium","High")
+
+data.long$EMSDiscontentment.Categorical <- bin(data.long$EMSDiscontentment, nbins=3,method="content")
+levels(data.long$EMSDiscontentment.Categorical) <- c("Low","Medium","High")
+
+data.long$EMSStrategy.Categorical <- bin(data.long$EMSStrategy, nbins=3,method="content")
+levels(data.long$EMSStrategy.Categorical) <- c("Low","Medium","High")
+
+data.long$MMQContentment.Categorical <- bin(data.long$MMQContentment, nbins=3,method="content")
+levels(data.long$MMQContentment.Categorical) <- c("Low","Medium","High")
+
+data.long$MMQStrategy.Categorical <- bin(data.long$MMQStrategy, nbins=3,method="content")
+levels(data.long$MMQStrategy.Categorical) <- c("Low","Medium","High")
+
+data.long$MMQAbility.Categorical <- bin(data.long$MMQAbility, nbins=3,method="content")
+levels(data.long$MMQAbility.Categorical) <- c("Low","Medium","High")
+
+data.long$SSMQ.Categorical <- bin(data.long$SSMQ, nbins=3,method="content")
+levels(data.long$SSMQ.Categorical) <- c("Low","Medium","High")
+
+
+#Change order of LineupAccuracy to have 0 = Innacurate and 1 = Accurate
+data.long$LineupAccuracy <- factor(data.long$LineupAccuracy , levels = c("Incorrect", "Correct"))
+
+data.long$LineupAccuracy.Numeric <- as.numeric(data.long$LineupAccuracy)-1
+
+#Subset biased and unbiased conditions
+data.unbiased <- subset(data.long, LineupMode == "Unbiased")
+data.biased <- subset(data.long, LineupMode == "Biased")
+
+data.unbiased.choosers <- subset(data.unbiased, LineupChoice == "Chooser")
+data.unbiased.nonchoosers <- subset(data.unbiased, LineupChoice == "Nonchooser")
+
+data.biased.choosers <- subset(data.biased, LineupChoice == "Chooser")
+data.biased.nonchoosers <- subset(data.biased, LineupChoice == "Nonchooser")
+
+data.choosers <- subset(data.long, LineupChoice == "Chooser")
+data.nonchoosers <- subset(data.long, LineupChoice == "Nonchooser")
+
+```
+
+```{r descriptive for lineups}
+
+describe(data.biased.choosers$LineupChoiceCategory)
+describe(data.biased.nonchoosers$LineupChoiceCategory)
+
+describe(data.unbiased.choosers$LineupChoiceCategory)
+describe(data.unbiased.nonchoosers$LineupChoiceCategory)
+```
+
+
+```{r inferential for lineups}
+
+#aov <- aov(LineupAccuracy.Numeric ~ LineupMode * LineupChoice, data = data.long)
+
+#Anova(aov, type = "III")
+
+#etaSquared(aov, type = 3)
+
+#anova_stats(car::Anova(aov, type = 3))
+
+#TukeyHSD(aov)
+
+#anova.data = describeBy(data.long$LineupAccuracy.Numeric,list(data.long$LineupMode,data.long$LineupChoice), mat=TRUE,digits=2)
+names(anova.data)[names(anova.data) == 'group1'] = 'LineupMode'
+names(anova.data)[names(anova.data) == 'group2'] = 'LineupChoice'
+
+#limits = aes(ymax = mean + (1.96*se), ymin=mean - (1.96*se))
+dodge = position_dodge(width=0.9)
+
+#ggplot(anova.data, aes(x = LineupChoice, y = mean, fill = LineupMode))+
+  geom_bar(stat='identity', position=dodge)+
+  geom_errorbar(limits, position=dodge, width=0.25)+
+  apatheme+
+  ylab('Identification Accuracy (Proportion)')+
+  xlab('Lineup Choice')+
+  scale_fill_grey() + 
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  labs(fill = "") + 
+  scale_y_continuous(breaks=seq(0, 1, 0.1),limits=c(0,1))
+
+#ggsave("Figure1.jpg", dpi= 600)
+```
+
+
+```{r inspect multicollinearity in the regression models}
+correlation.data <- data.long[,c("LineupAccuracy.Numeric","EMSContentment","EMSDiscontentment","EMSStrategy","MMQContentment","MMQAbility","MMQStrategy","SSMQ")]
+
+correlation.data <- data.long[,c("EMSContentment","EMSDiscontentment","EMSStrategy","MMQContentment","MMQAbility","MMQStrategy","SSMQ")]
+
+library(GGally)
+ggpairs(correlation.data)
+
+omcdiag(correlation.data,correlation.data$LineupAccuracy.Numeric,na.rm=T)
+imcdiag(correlation.data,correlation.data$LineupAccuracy.Numeric,na.rm=T)
+
+#apa.cor.table(correlation.data,filename = "correlation.table.doc")
+```
+
+```{r regression models}
+lineup.data.centered <- transform(data.long,
+    EMSContentment.cs=scale(EMSContentment),
+    EMSDiscontentment.cs=scale(EMSDiscontentment),
+    EMSStrategy.cs=scale(EMSStrategy),
+    MMQContentment.cs=scale(MMQContentment),
+    MMQAbility.cs=scale(MMQAbility),
+    MMQStrategy.cs=scale(MMQStrategy),
+    SSMQ.cs=scale(SSMQ),
+    LineupConfidence.cs=scale(LineupConfidence))
+
+#Subset biased and unbiased conditions
+data.unbiased.cs <- subset(lineup.data.centered, LineupMode == "Unbiased")
+data.biased.cs <- subset(lineup.data.centered, LineupMode == "Biased")
+
+data.unbiased.choosers.cs <- subset(data.unbiased.cs, LineupChoice == "Chooser")
+data.unbiased.nonchoosers.cs <- subset(data.unbiased.cs, LineupChoice == "Nonchooser")
+
+data.biased.choosers.cs <- subset(data.biased.cs, LineupChoice == "Chooser")
+data.biased.nonchoosers.cs <- subset(data.biased.cs, LineupChoice == "Nonchooser")
+
+data.choosers.cs <- subset(lineup.data.centered, LineupChoice == "Chooser")
+data.nonchoosers.cs <- subset(lineup.data.centered, LineupChoice == "Nonchooser")
+
+##Choosers model
+
+#Biased
+Correct.Identification.model.biased.choosers <- glmer(LineupAccuracy ~ EMSContentment.cs + EMSDiscontentment.cs + EMSStrategy.cs + MMQContentment.cs + MMQAbility.cs + MMQStrategy.cs + SSMQ.cs + (1 | ID) + (1 | Lineup), data = data.biased.choosers.cs, family = binomial)
+
+Correct.Identification.model.biased.choosers.fixed <- glm(LineupAccuracy ~ EMSContentment.cs + EMSDiscontentment.cs + EMSStrategy.cs + MMQContentment.cs + MMQAbility.cs + MMQStrategy.cs + SSMQ.cs, data = data.biased.choosers.cs, family = binomial)
+
+icc(Correct.Identification.model.biased.choosers)
+anova(Correct.Identification.model.biased.choosers,Correct.Identification.model.biased.choosers.fixed)
+
+summary(Correct.Identification.model.biased.choosers.fixed)
+odds.ratio(Correct.Identification.model.biased.choosers.fixed)
+
+#Unbiased
+
+Correct.Identification.Unbiased.model.choosers <- glmer(LineupAccuracy.Numeric ~ EMSContentment.cs + EMSDiscontentment.cs + EMSStrategy.cs + MMQContentment.cs + MMQAbility.cs + MMQStrategy.cs + SSMQ.cs + (1 | ID) + (1 | Lineup), data = data.unbiased.choosers.cs, family = binomial)
+
+Correct.Identification.Unbiased.model.choosers.fixed <- glm(LineupAccuracy.Numeric ~ EMSContentment.cs + EMSDiscontentment.cs + EMSStrategy.cs + MMQContentment.cs + MMQAbility.cs + MMQStrategy.cs + SSMQ.cs, data = data.unbiased.choosers.cs, family = binomial)
+
+icc(Correct.Identification.Unbiased.model.choosers)
+anova(Correct.Identification.Unbiased.model.choosers,Correct.Identification.Unbiased.model.choosers.fixed)
+
+summary(Correct.Identification.Unbiased.model.choosers.fixed)
+odds.ratio(Correct.Identification.Unbiased.model.choosers.fixed)
+
+##Nonchoosers model
+
+#Biased
+Correct.Identification.Biased.model.nonchoosers <- glmer(LineupAccuracy.Numeric ~ EMSContentment.cs + EMSDiscontentment.cs + EMSStrategy.cs + MMQContentment.cs + MMQAbility.cs + MMQStrategy.cs + SSMQ.cs + (1 | ID) + (1 |Lineup), data = data.biased.nonchoosers.cs, family = binomial)
+
+Correct.Identification.Biased.model.nonchoosers.fixed <- glm(LineupAccuracy.Numeric ~ EMSContentment.cs + EMSDiscontentment.cs + EMSStrategy.cs + MMQContentment.cs + MMQAbility.cs + MMQStrategy.cs + SSMQ.cs, data = data.biased.nonchoosers.cs, family = binomial)
+
+icc(Correct.Identification.Biased.model.nonchoosers)
+anova(Correct.Identification.Biased.model.nonchoosers,Correct.Identification.Biased.model.nonchoosers.fixed)
+
+summary(Correct.Identification.Biased.model.nonchoosers.fixed)
+odds.ratio(Correct.Identification.Biased.model.nonchoosers.fixed)
+
+#Unbiased
+Correct.Identification.Unbiased.model.nonchoosers <- glmer(LineupAccuracy.Numeric ~ EMSContentment.cs + EMSDiscontentment.cs + EMSStrategy.cs + MMQContentment.cs + MMQAbility.cs + MMQStrategy.cs + SSMQ.cs + (1 | ID) + (1 |Lineup), data = data.unbiased.nonchoosers.cs, family = binomial)
+
+Correct.Identification.Unbiased.model.nonchoosers.fixed <- glm(LineupAccuracy.Numeric ~ EMSContentment.cs + EMSDiscontentment.cs + EMSStrategy.cs + MMQContentment.cs + MMQAbility.cs + MMQStrategy.cs + SSMQ.cs, data = data.unbiased.nonchoosers.cs, family = binomial)
+
+icc(Correct.Identification.Unbiased.model.nonchoosers)
+anova(Correct.Identification.Unbiased.model.nonchoosers,Correct.Identification.Unbiased.model.nonchoosers.fixed)
+
+summary(Correct.Identification.Unbiased.model.nonchoosers.fixed)
+odds.ratio(Correct.Identification.Unbiased.model.nonchoosers.fixed)
+```
+
+```{r plot models}
+
+##Biased lineups
+Accuracy.plots <- plot_model(Correct.Identification.model.biased.choosers, type = "pred",title = "")
+
+p.EMSDiscontentment.Accuracy <- Accuracy.plots[[2]]
+
+p.EMSDiscontentment.Accuracy <- p.EMSDiscontentment.Accuracy + coord_cartesian(ylim = c(0, 1)) + 
+              xlab("EMS-Discontentment") +
+              ylab("Predicted probability") +
+              theme(axis.text=element_text(size=12),axis.title=element_text(size=12))
+
+hist <- ggplot()+geom_histogram(aes(data.unbiased$EMSDiscontentment))
+
+EMSDiscontentment.Accuracy.plot <- insert_xaxis_grob(p.EMSDiscontentment.Accuracy, hist, position = "bottom")
+
+EMSDiscontentment.Accuracy.plot <- ggdraw(EMSDiscontentment.Accuracy.plot)
+
+ggsave("EMS-Discontentment.Biased.png", dpi = 600)
+
+##Unbiased lineups
+Accuracy.plots.biased <- plot_model(Correct.Identification.Unbiased.model.choosers, type = "pred",title = "")
+
+p.EMSDiscontentment.Accuracy <- Accuracy.plots.biased[[2]]
+
+p.EMSDiscontentment.Accuracy <- p.EMSDiscontentment.Accuracy + coord_cartesian(ylim = c(0, 1)) + 
+              xlab("EMS-Discontentment") +
+              ylab("Predicted probability") +
+              theme(axis.text=element_text(size=12),axis.title=element_text(size=12))
+
+hist <- ggplot()+geom_histogram(aes(data.biased$EMSDiscontentment))
+
+EMSDiscontentment.Accuracy.plot <- insert_xaxis_grob(p.EMSDiscontentment.Accuracy, hist, position = "bottom")
+
+EMSDiscontentment.Accuracy.plot <- ggdraw(EMSDiscontentment.Accuracy.plot)
+
+ggsave("EMS-Discontentment.Unbiased.png", dpi = 600)
+
+p.MMQContentment.Accuracy <- Accuracy.plots.biased[[4]]
+
+p.MMQContentment.Accuracy <- p.MMQContentment.Accuracy + coord_cartesian(ylim = c(0, 1)) + 
+              xlab("MMQ-Contentment") +
+              ylab("Predicted probability") +
+              theme(axis.text=element_text(size=12),axis.title=element_text(size=12))
+
+hist <- ggplot()+geom_histogram(aes(data.biased$MMQContentment))
+
+p.MMQContentment.Accuracy.plot <- insert_xaxis_grob(p.MMQContentment.Accuracy, hist, position = "bottom")
+
+p.MMQContentment.Accuracy.plot <- ggdraw(p.MMQContentment.Accuracy.plot)
+
+ggsave("Figure 3. MMQ-Contentment.Unfair.png",width=9, height=7, units="in" , dpi = 900)
+
+
+p.SSMQ.Accuracy <- Accuracy.plots.biased[[7]]
+
+p.SSMQ.Accuracy <- p.SSMQ.Accuracy + coord_cartesian(ylim = c(0, 1)) + 
+              xlab("Memory Development") +
+              ylab("Predicted probability") +
+              theme(axis.text=element_text(size=12),axis.title=element_text(size=12))
+
+hist <- ggplot()+geom_histogram(aes(data.biased$SSMQ))
+
+p.SSMQ.Accuracy.plot <- insert_xaxis_grob(p.SSMQ.Accuracy, hist, position = "bottom")
+
+p.SSMQ.Accuracy.plot <- ggdraw(p.SSMQ.Accuracy.plot)
+
+ggsave("Figure 4. SSMQ.Unfair.png",width=9, height=7, units="in" , dpi = 900)
+
+```
+
+
+
+#CALIBRATION ANALYSES
+
+```{r calibration}
+
+Cal.Choosers.Nonchoosers <- CA.rel(data = data.long, confidence = "LineupConfidence", correct = "LineupAccuracy.Numeric",
+                  test = "CAL", var = "LineupChoice", 
+                  confidenceLevels = list(c(0,20),c(30,40), c(50,60), c(70,80), c(90,100)), jack = T)
+cal.choosers.nonchoosers.curve <- CA.curves(Cal.Choosers.Nonchoosers)
+
+cal.choosers.nonchoosers.curve[[1]] + apatheme +
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+  
+ggsave("Calibration.Choosers.vs.Nonchoosers.png", dpi = 600)
+
+Cal.Biased.Unbiased <- CA.rel(data = data.long, confidence = "LineupConfidence", correct = "LineupAccuracy.Numeric",
+                  test = "CAL", var = "LineupMode", 
+                  confidenceLevels = list(c(0,20),c(30,40), c(50,60), c(70,80), c(90,100)), jack = T)
+cal.biased.unbiased.curve <- CA.curves(Cal.Biased.Unbiased)
+
+cal.biased.unbiased.curve[[1]] + apatheme +
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+
+ggsave("Calibration.Biased vs Unbiased.png", dpi = 600)
+
+```
+
+```{r calibration and metamemory}
+
+ch.raters <- CA.rel(data = data.choosers, confidence = "LineupConfidence", correct = "LineupAccuracy.Numeric", test = "CAL", 
+                    var = c("EMSContentment.Categorical","EMSDiscontentment.Categorical","EMSStrategy.Categorical","MMQContentment.Categorical","MMQStrategy.Categorical","MMQAbility.Categorical","SSMQ.Categorical"),
+                    var.names = c("EMS-Contentment", "EMS-Discontentment","EMS-Strategy","MMQ-Contentment","MMQ-Strategy","MMQ-Ability","SSMQ"),
+                    var.levels = c('Low', 'High'), 
+                    confidenceLevels = list(c(0,20),c(30,40), c(50,60), c(70,80), c(90,100)), jack = T)
+
+calibration.metamemory.curves <- CA.curves(ch.raters, labelVarType = T)
+
+calibration.metamemory.curves[[1]] + apatheme +
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("EMS-Contentment.curve.png", dpi = 600)
+
+calibration.metamemory.curves[[2]] + apatheme +
+  theme(legend.position=c(0.25,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("EMS-Discontentment.curve.png", dpi = 600)
+
+calibration.metamemory.curves[[3]] + apatheme +
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("EMS-Strategies.curve.png", dpi = 600)
+
+calibration.metamemory.curves[[7]] + apatheme +
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("SSMQ.curve.png", dpi = 600)
+
+
+calibration.metamemory.CI.plots <- CA.plotCI(ch.raters,ylim = list(C = NULL, OU = NULL, NRI = NULL))
+
+calibration.metamemory.CI.plots[[1]] + apatheme
+ggsave("CI.plots.Metamemory.C.png", dpi = 600)
+
+calibration.metamemory.CI.plots[[2]] + apatheme
+ggsave("CI.plots.Metamemory.OU.png", dpi = 600)
+
+calibration.metamemory.CI.plots[[3]] + apatheme
+ggsave("CI.plots.Metamemory.NRI.png", dpi = 600)
+
+
+#Biased choosers
+cal.biased.choosers <- CA.rel(data = data.biased.choosers, confidence = "LineupConfidence", correct = "LineupAccuracy.Numeric", test = "CAL", 
+                    var = c("EMSContentment.Categorical","EMSDiscontentment.Categorical","EMSStrategy.Categorical","MMQContentment.Categorical","MMQStrategy.Categorical","MMQAbility.Categorical","SSMQ.Categorical"),
+                    var.names = c("EMS-Contentment", "EMS-Discontentment","EMS-Strategy","MMQ-Contentment","MMQ-Strategy","MMQ-Ability","SSMQ"),
+                    var.levels = c('Low', 'High'), 
+                    confidenceLevels = list(c(0,20),c(30,40), c(50,60), c(70,80), c(90,100)), jack = T)
+
+cal.curves.biased.choosers <- CA.curves(cal.biased.choosers, labelVarType = T)
+
+cal.curves.biased.choosers[[1]] + apatheme +
+  theme(legend.position=c(0.25,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("EMS-Contentment.Biased.choosers.curve.png", dpi = 600)
+
+cal.curves.biased.choosers[[2]] + apatheme +
+  theme(legend.position=c(0.80,0.2), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("EMS-Discontentment.Biased.choosers.curve.png", dpi = 600)
+
+cal.curves.biased.choosers[[3]] + apatheme +
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("EMS-Strategies.Biased.choosers.curve.png", dpi = 600)
+
+cal.curves.biased.choosers[[7]] + apatheme +
+  theme(legend.position=c(0.8,0.2), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("SSMQ.Biased.choosers.curve.png", dpi = 600)
+
+
+ca.plots.biased.choosers <- CA.plotCI(cal.biased.choosers,ylim = list(C = NULL, OU = NULL, NRI = NULL))
+
+ca.plots.biased.choosers[[1]] + apatheme
+ggsave("CI.plots.Biased.choosers.C.png", dpi = 600)
+
+ca.plots.biased.choosers[[2]] + apatheme
+ggsave("CI.plots.Biased.choosers.OU.png", dpi = 600)
+
+ca.plots.biased.choosers[[3]] + apatheme
+ggsave("CI.plots.Biased.choosers.NRI.png", dpi = 600)
+
+#Unbiased choosers
+cal.unbiased.choosers <- CA.rel(data = data.unbiased.choosers, confidence = "LineupConfidence", correct = "LineupAccuracy.Numeric", test = "CAL", 
+                    var = c("EMSContentment.Categorical","EMSDiscontentment.Categorical","EMSStrategy.Categorical","MMQContentment.Categorical","MMQStrategy.Categorical","MMQAbility.Categorical","SSMQ.Categorical"),
+                    var.names = c("EMS-Contentment", "EMS-Discontentment","EMS-Strategy","MMQ-Contentment","MMQ-Strategy","MMQ-Ability","SSMQ"),
+                    var.levels = c('Low', 'High'),
+                    confidenceLevels = list(c(0,20),c(30,40), c(50,60), c(70,80), c(90,100)), jack = T)
+
+cal.curves.unbiased.choosers <- CA.curves(cal.unbiased.choosers, labelVarType = T)
+
+cal.curves.unbiased.choosers[[1]] + apatheme +
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("EMS-Contentment.Unbiased.choosers.curve.png", dpi = 600)
+
+cal.curves.unbiased.choosers[[2]] + apatheme +
+  theme(legend.position=c(0.25,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("EMS-Discontentment.Unbiased.choosers.curve.png", dpi = 600)
+
+cal.curves.unbiased.choosers[[3]] + apatheme +
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("EMS-Strategies.Unbiased.choosers.curve.png", dpi = 600)
+
+cal.curves.unbiased.choosers[[7]] + apatheme +
+  theme(legend.position=c(0.2,0.9), legend.box = "horizontal") +
+  theme(legend.title=element_blank())
+ggsave("SSMQ.Unbiased.choosers.curve.png", dpi = 600)
+
+
+ca.plots.unbiased.choosers <- CA.plotCI(cal.unbiased.choosers,ylim = list(C = NULL, OU = NULL, NRI = NULL))
+
+ca.plots.unbiased.choosers[[1]] + apatheme
+ggsave("CI.plots.Unbiased.choosers.C.png", dpi = 600)
+
+ca.plots.unbiased.choosers[[2]] + apatheme
+ggsave("CI.plots.Unbiased.choosers.OU.png", dpi = 600)
+
+ca.plots.unbiased.choosers[[3]] + apatheme
+ggsave("CI.plots.Unbiased.choosers.NRI.png", dpi = 600)
+
+```

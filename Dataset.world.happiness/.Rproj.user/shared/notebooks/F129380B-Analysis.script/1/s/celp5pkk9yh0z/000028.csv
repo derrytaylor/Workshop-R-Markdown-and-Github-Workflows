@@ -1,0 +1,7 @@
+"0","#We can also plot many variables at the same time"
+"0","data.clean %>%"
+"0","  keep(is.numeric) %>% "
+"0","  gather() %>% "
+"0","  ggplot(aes(value)) +"
+"0","    facet_wrap(~ key, scales = ""free"") +"
+"0","    geom_histogram()"

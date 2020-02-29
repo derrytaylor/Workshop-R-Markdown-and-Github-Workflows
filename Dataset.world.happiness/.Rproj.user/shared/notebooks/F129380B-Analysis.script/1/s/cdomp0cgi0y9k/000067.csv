@@ -1,0 +1,4 @@
+"0","#Now our data is clean, let's save this dataset in a different object"
+"0","data.clean <- data.raw2"
+"0","#One last modification: Change the Year variable to factor"
+"0","data.clean$Year <- as.factor(data.clean$Year)"
