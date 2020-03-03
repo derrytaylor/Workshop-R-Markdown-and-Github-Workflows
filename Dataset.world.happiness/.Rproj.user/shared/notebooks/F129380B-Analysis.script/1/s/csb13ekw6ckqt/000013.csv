@@ -1,3 +1,0 @@
-"0","#Let's fit a regression model and check some of the assumptions"
-"0","model <- lm(Happiness.score ~ Corruption + Freedom+ GDP + Generosity + Social.support + Healthy.life.expectancy, data = data.clean)"
-"0","par(mfrow = c(2, 2))"

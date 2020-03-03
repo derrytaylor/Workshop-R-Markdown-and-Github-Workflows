@@ -28,6 +28,35 @@ The main goal of this exercise is to have some hands-on experience with R. Don't
 ?mean
 ```
 
+## Getting ready
+
+In R, many functions can be found inside 'packages'. Think of packages as a collection of useful functions that R users create to make your data analysis life easier and more exciting. During this exercise we will try to use some functions from several different packages. 
+
+To install a package you can use `install.packages("package.name")`, and then load the package with `library(package.name)`. 
+
+```{r, echo=T,message=F,eval=F}
+
+install.packages(name.of.package)
+library(package)
+
+
+#Run this part of the code to install all required packages for this exercise
+if(!require(dplyr)){install.packages("dplyr")}   
+if(!require(ggplot2)){install.packages("ggplot2")}   
+if(!require(Hmisc)){install.packages("Hmisc")}   
+if(!require(pastecs)){install.packages("pastecs")}   
+if(!require(psych)){install.packages("psych")}   
+if(!require(corrplot)){install.packages("corrplot")}   
+if(!require(ggExtra)){install.packages("ggExtra")}   
+if(!require(plotly)){install.packages("plotly")} 
+if(!require(purrr)){install.packages("purrr")} 
+if(!require(tidyr)){install.packages("tidyr")} 
+if(!require(PerformanceAnalytics)){install.packages("PerformanceAnalytics")}
+
+```
+
+Done! Now you have access to a multitude of functions that can help your analysis.
+
 ## First step: Importing the data
 
 First of all, we need to import our data into R! You can find all datasets in the "Dataset.world.happiness" folder. There are a total of 5 datasets in csv format (2015, 2016, 2017, 2018, 2019). Try using the `read.csv` function to import the datasets
@@ -68,12 +97,9 @@ data.raw <- data.2015 %>%
 
 ## Cleaning the data
 
-Let's have a closer look at the data and plot a histogram for the Happiness.score variable. You can try to use the `hist` function or the `qplot` function of the ggplot2 package. To install a package you can use install.packages("package.name"), and then load the package with library(package.name)
+Let's have a closer look at the data and plot a histogram for the Happiness.score variable. You can try to use the `hist` function or the `qplot` function of the ggplot2 package.
 
 ```{r happiness plot, echo=T,message=F,eval=F}
-
-install.packages("ggplot2")
-library(ggplot2)
 
 qplot(data.raw$Happiness.score)
 

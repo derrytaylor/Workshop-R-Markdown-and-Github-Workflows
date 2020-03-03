@@ -1,6 +1,0 @@
-"0","library(ggExtra)"
-"0","library(plotly)"
-"0","library(purrr)"
-"0","library(tidyr)"
-"0","#Let's plot some histograms"
-"0","qplot(data.clean$Happiness.score)"

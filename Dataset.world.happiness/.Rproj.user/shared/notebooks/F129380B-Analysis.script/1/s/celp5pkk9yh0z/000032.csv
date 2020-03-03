@@ -1,7 +1,0 @@
-"0","#Now let's try some interactive plots!"
-"0","fig <- plot_ly("
-"0","  data.clean, x = ~GDP, y = ~Happiness.score,"
-"0","  color = ~Year, size = ~GDP,"
-"0","   #Hover text:"
-"0","  text = ~paste(""GDP: "", GDP, '$<br>Country:', Country)"
-"0",")"

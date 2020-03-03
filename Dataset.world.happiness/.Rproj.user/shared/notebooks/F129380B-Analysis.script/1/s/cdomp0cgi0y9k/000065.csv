@@ -1,4 +1,0 @@
-"0","#It seems our dataset contains some data from Venus, Mars and Pluto, which does not fit within our research question. Let's remove these observations."
-"0","data.raw2 <- data.raw %>% filter(Country != c(""Pluto"",""Venus"",""Mars""))"
-"2","longer object length is not a multiple of shorter object length"
-"0","qplot(data.raw2$Happiness.score)"

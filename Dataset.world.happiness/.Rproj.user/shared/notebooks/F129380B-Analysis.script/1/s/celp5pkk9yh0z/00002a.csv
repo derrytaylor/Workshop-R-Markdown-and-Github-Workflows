@@ -1,6 +1,0 @@
-"0","#Some initial exploratory plots"
-"0","theme_set(theme_bw())  # pre-set the bw theme."
-"0","ggplot(data.clean, aes(GDP, Happiness.score)) + "
-"0","  geom_jitter(aes(col=Year)) + "
-"0","  geom_smooth(aes(col=Year), method=""lm"", se=F) +"
-"0","  labs(title =""Happiness vs GDP by year"")"
